@@ -13,26 +13,23 @@ import com.example.agenda.DAO.AlunoDao;
 import com.example.agenda.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 //AppCompatActivity que da suporte a versão anteriores
 public class ListaAlunosActivity extends AppCompatActivity {
+
+    public static final String TITULO_APPBAR = "Lista de alunos";
+    private final AlunoDao dao = new AlunoDao();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         //Código executado durante a criação da actitivy: OnAppearing
         super.onCreate(savedInstanceState);
-        setTitle("Lista de alunos");
+        //A classe R faz um mapeando de todos os arquivos do projeto
+        //Lembre-se que para pegar referência dos arquivos estáticos o Android oferece a classe R.
+        setContentView(R.layout.activity_lista_alunos);
 
-        FloatingActionButton botaoNovoAluno = findViewById(R.id.activity_lista_alunos_fab_novo_aluno);
-        botaoNovoAluno.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(ListaAlunosActivity.this, FormularioAlunoActivity.class));
-            }
-        });
+
+        setTitle(TITULO_APPBAR);
+        configuraFabNovoAluno();
 
         //Context, quem está executando a ação
         //Terceiro parametro é a duração
@@ -42,13 +39,31 @@ public class ListaAlunosActivity extends AppCompatActivity {
         //aluno.setText("Gabriel Ribeiro");
         //setContentView(aluno);
 
-        //A classe R faz um mapeando de todos os arquivos do projeto
-        //Lembre-se que para pegar referência dos arquivos estáticos o Android oferece a classe R.
-        setContentView(R.layout.activity_lista_alunos);
+    }
 
-        AlunoDao dao = new AlunoDao();
+    private void configuraFabNovoAluno() {
+        FloatingActionButton botaoNovoAluno = findViewById(R.id.activity_lista_alunos_fab_novo_aluno);
+        botaoNovoAluno.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                abreFormularioAlunoActivity();
+            }
+        });
+    }
 
-//        List<String> alunos = new ArrayList<>(
+    private void abreFormularioAlunoActivity() {
+        startActivity(new Intent(ListaAlunosActivity.this, FormularioAlunoActivity.class));
+    }
+
+    //OnAppearing
+    @Override
+    protected void onResume() {
+        super.onResume();
+        configuraLista();
+    }
+
+    private void configuraLista() {
+        //        List<String> alunos = new ArrayList<>(
 //                Arrays.asList("Gabriel", "Cecilia", "Eduardo")
 //        );
 

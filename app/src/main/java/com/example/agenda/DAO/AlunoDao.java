@@ -12,7 +12,7 @@ public class AlunoDao {
     public void salva(Aluno aluno) {
         alunos.add(aluno);
     }
-
+//Devovler uma copia da lista é a melhor situação
     public List<Aluno> todos() {
         return new ArrayList<>(alunos);
     }
