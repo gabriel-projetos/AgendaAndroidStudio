@@ -1,5 +1,6 @@
 package com.example.agenda.ui.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -11,13 +12,19 @@ import com.example.agenda.DAO.AlunoDao;
 import com.example.agenda.R;
 import com.example.agenda.model.Aluno;
 
+import static com.example.agenda.ui.activity.ConstantesActivities.CHAVE_ALUNO;
+
 public class FormularioAlunoActivity extends AppCompatActivity {
 
-    public static final String TITULO_APPBAR = "Novo aluno";
+    private static final String TITULO_APPBAR_NOVO_ALUNO = "Novo aluno";
+    private static final String TITULO_APPBAR_EDITA_ALUNO = "Edita aluno";
     private EditText campoNome;
     private EditText campoTelefone;
     private EditText campoEmaiL;
+
+    //Final é porque estamos usando variaveis locais, em innersclass, jã que elas não podem modificar variaveis de classe
     private final AlunoDao dao = new AlunoDao();
+    private Aluno aluno;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,10 +32,28 @@ public class FormularioAlunoActivity extends AppCompatActivity {
         //Só temos acesso aos campos dpeois de iniciar a activity, como por exemplo o findViewByID
         setContentView(R.layout.activity_formulario_aluno);
 
-        //Final é porque estamos usando variaveis locais
-        setTitle(TITULO_APPBAR);
+
         inicializacaoDosCampos();
         configuraBotaoSalvar();
+        carregaAluno();
+    }
+
+    private void carregaAluno() {
+        Intent dados = getIntent();
+        if(dados.hasExtra(CHAVE_ALUNO)){
+            setTitle(TITULO_APPBAR_EDITA_ALUNO);
+            aluno = (Aluno) dados.getSerializableExtra(CHAVE_ALUNO);
+            PreencheCampos();
+        }else{
+            setTitle(TITULO_APPBAR_NOVO_ALUNO);
+            aluno = new Aluno();
+        }
+    }
+
+    private void PreencheCampos() {
+        campoNome.setText(aluno.getNome());
+        campoEmaiL.setText(aluno.getEmail());
+        campoTelefone.setText(aluno.getTelefone());
     }
 
     private void configuraBotaoSalvar() {
@@ -36,10 +61,21 @@ public class FormularioAlunoActivity extends AppCompatActivity {
         botaoSalvar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Aluno alunoCriado = criaAluno();
-                salva(alunoCriado);
+                finalizaFormulario();
             }
         });
+    }
+
+    private void finalizaFormulario() {
+        //Aluno alunoCriado = criaAluno();
+        //salva(alunoCriado);
+        preencheAluno();
+        if(aluno.temIdValido()){
+            dao.edita(aluno);
+        }else{
+            dao.salva(aluno);
+        }
+        finish();
     }
 
     private void inicializacaoDosCampos() {
@@ -48,18 +84,20 @@ public class FormularioAlunoActivity extends AppCompatActivity {
         campoEmaiL = findViewById(R.id.activity_formulario_aluno_email);
     }
 
-    private void salva(Aluno aluno) {
-        dao.salva(aluno);
+//    private void salva(Aluno aluno) {
+//        dao.salva(aluno);
+//
+//        //tartActivity enviando o contexto da FormularioAlunoActivity e a referência de classe da ListaAlunosActivity respectivamente via argumento.
+//        //intent: classe que indica de onde estamos e para onde queremos ir
+//        //startActivity(new Intent(FormularioAlunoActivity.this, ListaAlunosActivity.class));
+//
+//        //Destroi a activity, desempilhar
+//        finish();
+//    }
 
-        //tartActivity enviando o contexto da FormularioAlunoActivity e a referência de classe da ListaAlunosActivity respectivamente via argumento.
-        //intent: classe que indica de onde estamos e para onde queremos ir
-        //startActivity(new Intent(FormularioAlunoActivity.this, ListaAlunosActivity.class));
-
-        //Destroi a activity, desempilhar
-        finish();
-    }
-
-    private Aluno criaAluno() {
+    //Garante que não será devolvido uma referencia nula
+    //@NonNull
+    private void preencheAluno() {
         String nome = campoNome.getText().toString();
         String telefone = campoTelefone.getText().toString();
         String email = campoEmaiL.getText().toString();
@@ -67,6 +105,10 @@ public class FormularioAlunoActivity extends AppCompatActivity {
         //Toast.makeText(FormularioAlunoActivity.this
         //        , alunoCriado.getNome() + " - " + alunoCriado.getTelefone()  + " - " + alunoCriado.getEmail()
         //       , Toast.LENGTH_SHORT).show();
-        return new Aluno(nome, telefone, email);
+        //return new Aluno(nome, telefone, email);
+
+        aluno.setNome(nome);
+        aluno.setEmail(email);
+        aluno.setTelefone(telefone);
     }
 }
