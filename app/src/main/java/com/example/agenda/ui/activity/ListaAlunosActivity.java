@@ -3,20 +3,21 @@ package com.example.agenda.ui.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.agenda.DAO.AlunoDao;
 import com.example.agenda.R;
 import com.example.agenda.model.Aluno;
+import com.example.agenda.ui.ListaAlunosView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
-import java.util.List;
 
 import static com.example.agenda.ui.activity.ConstantesActivities.CHAVE_ALUNO;
 
@@ -24,15 +25,26 @@ import static com.example.agenda.ui.activity.ConstantesActivities.CHAVE_ALUNO;
 public class ListaAlunosActivity extends AppCompatActivity {
 
     public static final String TITULO_APPBAR = "Lista de alunos";
-    private final AlunoDao dao = new AlunoDao();
+//    private final AlunoDao dao = new AlunoDao();
+//    private ListaAlunosAdapter adapter;
+    //passando os metodos para outra classe, não é possivel pegar o contexto antes do onCreate
+    //private final ListaAlunosView listaAlunosView = new ListaAlunosView(this);
+
+
+    private ListaAlunosView listaAlunosView;
+
 
     //Utilizar a referência do Adapter para manipular os dados do AdapterView.
-    private ArrayAdapter<Aluno> adapter;
+    //private ArrayAdapter<Aluno> adapter;
 
 
     //ctor
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+
+
+        //SEMPRE QUE ROTACIONA A ACTIVITY É DESTRUIDA E CRIADA NOVAMENTE.
+
         //Código executado durante a criação da actitivy: OnAppearing
         super.onCreate(savedInstanceState);
         //A classe R faz um mapeando de todos os arquivos do projeto
@@ -41,10 +53,15 @@ public class ListaAlunosActivity extends AppCompatActivity {
 
 
         setTitle(TITULO_APPBAR);
+
+        //Passar parametros de contexto pelo oncreate
+        listaAlunosView = new ListaAlunosView(this);
+
+
         configuraFabNovoAluno();
         configuraLista();
-        dao.salva(new Aluno("Gabriel", "11963485531", "gabriel.rossi96@hotmail.com"));
-        dao.salva(new Aluno("Eduardo", "11983035280", "edu.rossi96@hotmail.com"));
+
+
 
         //Context, quem está executando a ação
         //Terceiro parametro é a duração
@@ -55,6 +72,39 @@ public class ListaAlunosActivity extends AppCompatActivity {
         //setContentView(aluno);
 
     }
+
+
+    //Adicionar menus de contexto
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+
+        //Adicionando o menu de contexto via arquivo estatico
+        getMenuInflater().inflate(R.menu.activity_lista_alunos_menu, menu);
+        //menu.add("Remover");
+    }
+
+    //Quando tipo de menu de contexto chamado é disparado esse eveto
+    @Override
+    public boolean onContextItemSelected(@NonNull final MenuItem item) {
+
+        //Pegando pelo id o titulo
+        int itemId = item.getItemId();
+
+        //Vendo qual menu de contexto foi clicado
+        @SuppressWarnings("unused") CharSequence tituloMenu = item.getTitle();
+        //if(tituloMenu.equals("Remover")){
+        if(itemId == R.id.activity_lista_alunos_menu_remover){
+            listaAlunosView.confirmaRemocao(item);
+        }else{
+            Toast.makeText(ListaAlunosActivity.this, "Olá", Toast.LENGTH_LONG).show();
+        }
+
+
+        return super.onContextItemSelected(item);
+    }
+
+
 
     private void configuraFabNovoAluno() {
         FloatingActionButton botaoNovoAluno = findViewById(R.id.activity_lista_alunos_fab_novo_aluno);
@@ -74,13 +124,9 @@ public class ListaAlunosActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        atualizaAlunos();
+        listaAlunosView.atualizaAlunos();
     }
 
-    private void atualizaAlunos() {
-        adapter.clear();
-        adapter.addAll(dao.todos());
-    }
 
     private void configuraLista() {
         //        List<String> alunos = new ArrayList<>(
@@ -94,30 +140,33 @@ public class ListaAlunosActivity extends AppCompatActivity {
 
         //Implementação de uma variavel local dentro de uma implementaçção de uma classe anonima ela precisa ser final
         //final List<Aluno> alunos = dao.todos();
-        configuraAdapter(listaDeAlunos);
+        listaAlunosView.configuraAdapter(listaDeAlunos);
         configuraListenerClickPorItem(listaDeAlunos);
-        configuraListnerDeCliqueLongoPorItem(listaDeAlunos);
+        //configuraListnerDeCliqueLongoPorItem(listaDeAlunos);
+
+        //registrando um menu de contexto para cada item da lista, quando recebe uma ViewGruoup ele já consegue  se resolver e adicionar um menu de contexto para cada item filho da lista
+        registerForContextMenu(listaDeAlunos);
     }
 
-    private void configuraListnerDeCliqueLongoPorItem(ListView listaDeAlunos) {
-        listaDeAlunos.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position, long id) {
-                Log.i("Clique Longo", "Posição: " + position);
-                Aluno alunoEscolhido = (Aluno) adapterView.getItemAtPosition(position);
-                //dao.remove(alunoEscolhido);
-                remove(alunoEscolhido);
-
-                //Consome to do o evento, nao passando  ele para frente
-                return true;
-            }
-
-            private void remove(Aluno aluno) {
-                //CollectionView, apaga e notifica a tela
-                adapter.remove(aluno);
-            }
-        });
-    }
+//    private void configuraListnerDeCliqueLongoPorItem(ListView listaDeAlunos) {
+//        listaDeAlunos.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+//            @Override
+//            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position, long id) {
+//                Log.i("Clique Longo", "Posição: " + position);
+//                Aluno alunoEscolhido = (Aluno) adapterView.getItemAtPosition(position);
+//                //dao.remove(alunoEscolhido);
+//                remove(alunoEscolhido);
+//
+//                //Consome o evento, nao passando  ele para frente
+//                return false;
+//            }
+//
+//            private void remove(Aluno aluno) {
+//                //CollectionView, apaga e notifica a tela
+//                adapter.remove(aluno);
+//            }
+//        });
+//    }
 
     private void configuraListenerClickPorItem(ListView listaDeAlunos) {
         //metodo exclusivo de adapter view, onClick
@@ -141,10 +190,5 @@ public class ListaAlunosActivity extends AppCompatActivity {
         vaiParaFormularioActivity.putExtra(CHAVE_ALUNO, aluno);
 
         startActivity(vaiParaFormularioActivity);
-    }
-
-    private void configuraAdapter(ListView listaDeAlunos) {
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
-        listaDeAlunos.setAdapter(adapter);
     }
 }

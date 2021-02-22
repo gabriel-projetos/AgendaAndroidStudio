@@ -15,7 +15,8 @@
         android:layout_alignParentBottom="true"
         android:layout_margin="16dp"
         android:clickable="true"
-        android:focusable="true" />
+        android:focusable="true"
+        android:contentDescription="Adicionar novo aluno" />
 
     <ListView
         android:id="@+id/activity_lista_alunos_listview"
